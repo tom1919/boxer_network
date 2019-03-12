@@ -1,0 +1,168 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+library(rvest) # web scraping
+library(dplyr) # data manipulation
+library(stringr) # string manipulation
+library(igraph) # social networks
+library(networkD3) # plot networks
+```
+
+Testing 
+```{r}
+# url <- 'https://en.wikipedia.org/wiki/Sergei_Kuzmin_(boxer)'
+# 
+# url <- 'https://en.wikipedia.org/wiki/Anthony_Joshua'
+# 
+# tbl <- read_html(url) %>% 
+#     html_nodes(css = 'table')
+# 
+# tbl[4] %>% html_table(fill = TRUE) %>% as.data.frame()
+```
+
+
+Urls that contain boxer's record
+```{r}
+urls = c('https://en.wikipedia.org/wiki/Anthony_Joshua',
+         'https://en.wikipedia.org/wiki/Deontay_Wilder',
+         'https://en.wikipedia.org/wiki/Tyson_Fury',
+         'https://en.wikipedia.org/wiki/Dillian_Whyte', # make sure u get right record
+         'https://en.wikipedia.org/wiki/Alexander_Povetkin',
+         'https://en.wikipedia.org/wiki/Jarrell_Miller',
+         'https://en.wikipedia.org/wiki/Kubrat_Pulev',
+         'https://en.wikipedia.org/wiki/Luis_Ortiz_(Cuban_boxer)',
+         'https://en.wikipedia.org/wiki/Dominic_Breazeale',
+         'https://en.wikipedia.org/wiki/Adam_Kownacki',
+         'https://en.wikipedia.org/wiki/Óscar_Rivas',
+         'https://en.wikipedia.org/wiki/Joseph_Parker_(boxer)',
+         'https://en.wikipedia.org/wiki/Agit_Kabayel',
+         'https://en.wikipedia.org/wiki/Filip_Hrgović',
+         'https://en.wikipedia.org/wiki/Sergei_Kuzmin_(boxer)',
+         "https://en.wikipedia.org/wiki/Joe_Joyce_(boxer)",
+         "https://en.wikipedia.org/wiki/Andy_Ruiz",
+         "https://en.wikipedia.org/wiki/Dereck_Chisora",
+         "https://en.wikipedia.org/wiki/Nathan_Gorman_(boxer)",
+         "https://en.wikipedia.org/wiki/Evgenyi_Romanov",
+         "https://en.wikipedia.org/wiki/Christian_Hammer",
+         "https://en.wikipedia.org/wiki/Robert_Helenius",
+         "https://en.wikipedia.org/wiki/Efe_Ajagba")
+```
+
+Extract boxer's name from urls
+```{r}
+boxer_names <- str_replace_all(urls, '.+wiki\\/', '') %>% 
+  str_replace_all('_', ' ') %>% str_replace_all(' \\(.+', '')
+```
+
+Extract boxer's win/loss record
+```{r}
+# col names that ids a win/loss record
+req_names = c("Result", "Record", "Opponent")
+record_lst = list()
+
+# for each boxer extract win/loss record form wikipedia url
+for (i in 1:length(urls)){
+  # read tables on webpage
+  tbl <- read_html(urls[i]) %>% 
+    html_nodes(css = 'table')
+  # print(paste0("i: ",  i))
+  
+  # for each table check if it's the win/loss record
+  for (j in 1:length(tbl)){
+    # convert html table to dataframe
+    record_temp = tbl[j] %>% html_table(fill = TRUE) %>% as.data.frame()
+    # check if the names in table look like a table with win/loss record 
+    if(length(intersect(req_names, record_temp %>% names())) == 3) {
+      # save the index of table with win/loss record
+      record_i = j
+    }
+  }
+  # convert win/loss record html table to dataframe
+  record = tbl[record_i] %>% html_table() %>% as.data.frame()
+  
+  # check again if requried names of table is there 
+  if(length(intersect(req_names, record %>% names())) == 3) {
+      # save the index of table with win/loss record
+      record_lst[[i]] = record
+    }
+  
+}
+
+# remove null entries from list
+# some boxers don't have win/loss records on their wikipeida page
+record_lst <- record_lst[!sapply(record_lst, is.null)]
+```
+
+Filter record for wins only
+```{r}
+# win_record = list()
+# for(i in 1:length(record_lst)){
+#   win_record[[i]] <- record_lst[[i]] %>% 
+#     filter(Result == "Win") %>% mutate(boxer = boxer_names[i])
+# }
+
+win_record = list()
+for(i in 1:length(record_lst)){
+  # save each win record into a list
+  win_record[[i]] <- record_lst[[i]] %>% 
+    # only wins
+    filter(Result == "Win") %>% 
+    # add a column in record for boxer's names
+    mutate(boxer = boxer_names[i]) %>%
+    # filter for only wins against other top boxers
+    filter(Opponent %in% boxer_names)
+}
+
+```
+
+Create network graph object
+```{r}
+# Create df of relationship from winner to loser
+relations <- bind_rows(win_record) # combine dfs in list to single df
+relations <- relations %>% 
+  mutate(from = boxer, to = Opponent) %>%
+  select(from, to, Type)
+
+# names of boxers in sample
+boxers_df = data.frame(name = union(relations$to, relations$from))
+
+# create igraph object
+boxers_g <- graph_from_data_frame(relations, directed = T, vertices = boxers_df)
+
+# save igraph object to be plotted using gephi
+write_graph(boxers_g, file = 'boxers_g.gml', format = 'gml')
+```
+
+
+D3 graph
+```{r}
+V(boxers_g)$div=c("hw")
+# Start by deleting any vertices that have no edges attached.
+boxers_g=delete.vertices(boxers_g,degree(boxers_g)==0)
+# we need to create ID attribute taking values 0,..,103 
+nodes=data.frame(vertex_attr(boxers_g))
+nodes$ID=as.numeric(nodes$name)-1
+#data frame with edge list
+edges=data.frame(get.edgelist(boxers_g)) 
+colnames(edges)=c("source","target")
+
+edges=merge(edges, nodes[,c("name","ID")],by.x="source",by.y="name")
+edges=merge(edges, nodes[,c("name","ID")],by.x="target",by.y="name")
+edges=edges[,3:4]
+colnames(edges)=c("source","target")
+
+
+j=forceNetwork(Links=edges, Nodes=nodes, Source = "source",
+               Target = "target", NodeID="name", Group="div",
+               fontSize=12, opacity = 0.8, zoom=T, legend=T)
+
+saveNetwork(j, file = 'boxers_g.html')
+```
+
+```{r}
+j
+```
+
