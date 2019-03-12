@@ -3,6 +3,12 @@ title: "Untitled"
 output: html_document
 ---
 
+TODO:
+- network centrality: page rank looks appropriate
+  - https://cambridge-intelligence.com/keylines-faqs-social-network-analysis/
+- reconsider only including boxers that are already top ranked bc pagerank
+  seems to help with cutting through that noise
+
 ```{r}
 library(rvest) # web scraping
 library(dplyr) # data manipulation
@@ -88,7 +94,6 @@ for (i in 1:length(urls)){
       # save the index of table with win/loss record
       record_lst[[i]] = record
     }
-  
 }
 
 # remove null entries from list
@@ -113,7 +118,7 @@ for(i in 1:length(record_lst)){
     # add a column in record for boxer's names
     mutate(boxer = boxer_names[i]) %>%
     # filter for only wins against other top boxers
-    filter(Opponent %in% boxer_names)
+    filter(Opponent %in% boxer_names) # might re-consider this
 }
 
 ```
