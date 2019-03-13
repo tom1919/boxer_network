@@ -8,7 +8,10 @@ TODO:
   - https://cambridge-intelligence.com/keylines-faqs-social-network-analysis/
 - reconsider only including boxers that are already top ranked bc pagerank
   seems to help with cutting through that noise
+- use win type to weight edges. duplicate relationships to create weights, or
+  there's probably functionality in igraph for creating weights
 
+Load libraries
 ```{r}
 library(rvest) # web scraping
 library(dplyr) # data manipulation
@@ -66,8 +69,9 @@ boxer_names <- str_replace_all(urls, '.+wiki\\/', '') %>%
 
 Extract boxer's win/loss record
 ```{r}
-# col names that ids a win/loss record
+# col names that indentifies a win/loss record table
 req_names = c("Result", "Record", "Opponent")
+
 record_lst = list()
 
 # for each boxer extract win/loss record form wikipedia url
@@ -127,7 +131,7 @@ for(i in 1:length(record_lst)){
 Create network graph object
 ```{r}
 # Create df of relationship from loser to winner
-relations <- bind_rows(win_record) # combine dfs in list to single df
+relations <- bind_rows(win_record) # combine dfs in the list to single df
 relations <- relations %>% 
   # centrality measure gives importance to nodes with more edges directed toward
   # a node. Therefore, relationships is defined as opponent gives a loss to boxer
@@ -140,7 +144,7 @@ boxers_df = data.frame(name = union(relations$to, relations$from))
 # create igraph object
 boxers_g <- graph_from_data_frame(relations, directed = T, vertices = boxers_df)
 
-# save igraph object to be plotted using gephi
+# save igraph object. to be plotted using gephi
 write_graph(boxers_g, file = 'boxers_g.gml', format = 'gml')
 ```
 
@@ -172,9 +176,20 @@ saveNetwork(j, file = 'boxers_g.html')
 
 Ranking
 ```{r}
+# page rank centrality
+# PageRank theory suggests that an imaginary flow of losses that is randomly
+# going from one boxer to another will eventually stop. The damping factor is
+# the probability that the flow will continue at any step. Setting the damping
+# factor to 1 implies the flow of random losses will continue and when its 
+# applied to the network it will end on a boxer with no losses making that 
+# boxer's importance higher. Boxer's with no losses "absorb" more of the 
+# importance from boxer's that they beat. (AJ has higher
+# page rank value when damping is set to 1. When damping = 0 then they all have
+# the same value)
 pr <- page_rank(boxers_g, algo = "prpack", vids = V(boxers_g),
-          directed = TRUE)
+                directed = TRUE, damping = 1)
 
+# create a dataframe of boxer's ranking and sort 
 ranking <- pr$vector %>% 
   as.data.frame() %>% 
   rownames_to_column("Boxer") %>%
@@ -183,6 +198,9 @@ ranking <- pr$vector %>%
 ```
 
 
+```{r}
+ranking
+```
 
 
 
