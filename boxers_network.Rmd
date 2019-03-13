@@ -10,6 +10,9 @@ TODO:
   seems to help with cutting through that noise
 - use win type to weight edges. duplicate relationships to create weights, or
   there's probably functionality in igraph for creating weights
+- fix boxer name in dataframe. wrong boxer is attached to datadrame bc it gets
+  out of order when looping through
+- rowbind dfs then filter so u dont need another loop
 
 Load libraries
 ```{r}
@@ -79,7 +82,6 @@ for (i in 1:length(urls)){
   # read tables on webpage
   tbl <- read_html(urls[i]) %>% 
     html_nodes(css = 'table')
-  # print(paste0("i: ",  i))
   
   # for each table check if it's the win/loss record
   for (j in 1:length(tbl)){
@@ -88,51 +90,31 @@ for (i in 1:length(urls)){
     # check if the names in table look like a table with win/loss record 
     if(length(intersect(req_names, record_temp %>% names())) == 3) {
       # save the index of table with win/loss record
-      record_i = j
+      record_lst[[i]] <- record_temp %>%
+        mutate(boxer = boxer_names[i])
+      break
     }
   }
-  # convert win/loss record html table to dataframe
-  record = tbl[record_i] %>% html_table() %>% as.data.frame()
-  
-  # check again if requried names of table is there 
-  if(length(intersect(req_names, record %>% names())) == 3) {
-      # save the index of table with win/loss record
-      record_lst[[i]] = record
-    }
 }
+```
 
+Filter records for wins only
+```{r}
 # remove null entries from list
 # some boxers don't have win/loss records on their wikipeida page
 record_lst <- record_lst[!sapply(record_lst, is.null)]
+
+record_df <- bind_rows(record_lst) %>% 
+  # only wins
+  filter(Result == "Win")# %>% 
+  # filter for only wins against other top boxers
+  #filter(Opponent %in% boxer_names) # might re-consider this
 ```
 
-Filter record for wins only
-```{r}
-# win_record = list()
-# for(i in 1:length(record_lst)){
-#   win_record[[i]] <- record_lst[[i]] %>% 
-#     filter(Result == "Win") %>% mutate(boxer = boxer_names[i])
-# }
-
-win_record = list()
-for(i in 1:length(record_lst)){
-  # save each win record into a list
-  win_record[[i]] <- record_lst[[i]] %>% 
-    # only wins
-    filter(Result == "Win") %>% 
-    # add a column in record for boxer's names
-    mutate(boxer = boxer_names[i]) %>%
-    # filter for only wins against other top boxers
-    filter(Opponent %in% boxer_names) # might re-consider this
-}
-
-```
 
 Create network graph object
 ```{r}
-# Create df of relationship from loser to winner
-relations <- bind_rows(win_record) # combine dfs in the list to single df
-relations <- relations %>% 
+relations <- record_df %>% 
   # centrality measure gives importance to nodes with more edges directed toward
   # a node. Therefore, relationships is defined as opponent gives a loss to boxer
   mutate(to = boxer, from = Opponent) %>%
@@ -145,7 +127,7 @@ boxers_df = data.frame(name = union(relations$to, relations$from))
 boxers_g <- graph_from_data_frame(relations, directed = T, vertices = boxers_df)
 
 # save igraph object. to be plotted using gephi
-write_graph(boxers_g, file = 'boxers_g.gml', format = 'gml')
+#write_graph(boxers_g, file = 'boxers_g.gml', format = 'gml')
 ```
 
 
