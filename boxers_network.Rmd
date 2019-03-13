@@ -12,6 +12,7 @@ TODO:
 ```{r}
 library(rvest) # web scraping
 library(dplyr) # data manipulation
+library(tibble) # data manipulation
 library(stringr) # string manipulation
 library(igraph) # social networks
 library(networkD3) # plot networks
@@ -128,6 +129,8 @@ Create network graph object
 # Create df of relationship from loser to winner
 relations <- bind_rows(win_record) # combine dfs in list to single df
 relations <- relations %>% 
+  # centrality measure gives importance to nodes with more edges directed toward
+  # a node. Therefore, relationships is defined as opponent gives a loss to boxer
   mutate(to = boxer, from = Opponent) %>%
   select(from, to, Type)
 
@@ -167,15 +170,19 @@ j=forceNetwork(Links=edges, Nodes=nodes, Source = "source",
 saveNetwork(j, file = 'boxers_g.html')
 ```
 
+Ranking
 ```{r}
-foo <- page_rank(boxers_g, algo = "prpack", vids = V(boxers_g),
+pr <- page_rank(boxers_g, algo = "prpack", vids = V(boxers_g),
           directed = TRUE)
+
+ranking <- pr$vector %>% 
+  as.data.frame() %>% 
+  rownames_to_column("Boxer") %>%
+  rename(Page_Rank = 2) %>%
+  arrange(desc(Page_Rank))
 ```
 
 
 
-```{r}
-foo$vector
 
-```
 
