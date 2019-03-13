@@ -1,4 +1,4 @@
-Creator "igraph version 1.2.4 Tue Mar 12 18:05:47 2019"
+Creator "igraph version 1.2.4 Tue Mar 12 22:31:13 2019"
 Version 1
 graph
 [
@@ -41,149 +41,149 @@ graph
   node
   [
     id 7
-    name "Dominic Breazeale"
-  ]
-  node
-  [
-    id 8
     name "Óscar Rivas"
   ]
   node
   [
-    id 9
+    id 8
     name "Joseph Parker"
   ]
   node
   [
-    id 10
-    name "Andy Ruiz"
-  ]
-  node
-  [
-    id 11
-    name "Dereck Chisora"
-  ]
-  node
-  [
-    id 12
+    id 9
     name "Evgenyi Romanov"
   ]
   node
   [
-    id 13
+    id 10
+    name "Dominic Breazeale"
+  ]
+  node
+  [
+    id 11
     name "Christian Hammer"
   ]
   node
   [
-    id 14
+    id 12
+    name "Dereck Chisora"
+  ]
+  node
+  [
+    id 13
     name "Robert Helenius"
+  ]
+  node
+  [
+    id 14
+    name "Andy Ruiz"
   ]
   edge
   [
-    source 0
-    target 4
+    source 4
+    target 0
     Type "TKO"
   ]
   edge
   [
-    source 0
-    target 9
+    source 8
+    target 0
     Type "UD"
   ]
   edge
   [
-    source 0
-    target 7
+    source 10
+    target 0
     Type "TKO"
   ]
   edge
   [
-    source 0
+    source 3
+    target 0
+    Type "KO"
+  ]
+  edge
+  [
+    source 6
+    target 1
+    Type "TKO"
+  ]
+  edge
+  [
+    source 11
+    target 2
+    Type "RTD"
+  ]
+  edge
+  [
+    source 12
+    target 2
+    Type "RTD"
+  ]
+  edge
+  [
+    source 12
+    target 2
+    Type "UD"
+  ]
+  edge
+  [
+    source 12
     target 3
     Type "KO"
   ]
   edge
   [
-    source 1
-    target 6
-    Type "TKO"
-  ]
-  edge
-  [
-    source 2
-    target 13
-    Type "RTD"
-  ]
-  edge
-  [
-    source 2
-    target 11
-    Type "RTD"
-  ]
-  edge
-  [
-    source 2
-    target 11
-    Type "UD"
-  ]
-  edge
-  [
-    source 3
-    target 11
-    Type "KO"
-  ]
-  edge
-  [
-    source 3
-    target 9
-    Type "UD"
-  ]
-  edge
-  [
-    source 3
-    target 14
-    Type "UD"
-  ]
-  edge
-  [
-    source 3
-    target 11
-    Type "SD"
-  ]
-  edge
-  [
-    source 4
-    target 13
-    Type "UD"
-  ]
-  edge
-  [
-    source 5
-    target 11
-    Type "SD"
-  ]
-  edge
-  [
-    source 6
-    target 13
-    Type "UD"
-  ]
-  edge
-  [
     source 8
-    target 10
-    Type "MD"
+    target 3
+    Type "UD"
   ]
   edge
   [
-    source 9
-    target 11
+    source 13
+    target 3
+    Type "UD"
+  ]
+  edge
+  [
+    source 12
+    target 3
+    Type "SD"
+  ]
+  edge
+  [
+    source 11
+    target 4
+    Type "UD"
+  ]
+  edge
+  [
+    source 12
+    target 5
+    Type "SD"
+  ]
+  edge
+  [
+    source 11
+    target 6
+    Type "UD"
+  ]
+  edge
+  [
+    source 14
+    target 7
     Type "MD"
   ]
   edge
   [
     source 12
-    target 11
+    target 8
+    Type "MD"
+  ]
+  edge
+  [
+    source 12
+    target 9
     Type "SD"
   ]
 ]

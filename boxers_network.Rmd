@@ -125,10 +125,10 @@ for(i in 1:length(record_lst)){
 
 Create network graph object
 ```{r}
-# Create df of relationship from winner to loser
+# Create df of relationship from loser to winner
 relations <- bind_rows(win_record) # combine dfs in list to single df
 relations <- relations %>% 
-  mutate(from = boxer, to = Opponent) %>%
+  mutate(to = boxer, from = Opponent) %>%
   select(from, to, Type)
 
 # names of boxers in sample
@@ -168,6 +168,14 @@ saveNetwork(j, file = 'boxers_g.html')
 ```
 
 ```{r}
-j
+foo <- page_rank(boxers_g, algo = "prpack", vids = V(boxers_g),
+          directed = TRUE)
+```
+
+
+
+```{r}
+foo$vector
+
 ```
 
