@@ -4,15 +4,7 @@ output: html_document
 ---
 
 TODO:
-- network centrality: page rank looks appropriate
-  - https://cambridge-intelligence.com/keylines-faqs-social-network-analysis/
-- reconsider only including boxers that are already top ranked bc pagerank
-  seems to help with cutting through that noise
-- use win type to weight edges. duplicate relationships to create weights, or
-  there's probably functionality in igraph for creating weights
-- fix boxer name in dataframe. wrong boxer is attached to datadrame bc it gets
-  out of order when looping through
-- rowbind dfs then filter so u dont need another loop
+
 
 Load libraries
 ```{r}
@@ -26,14 +18,19 @@ library(networkD3) # plot networks
 
 Testing 
 ```{r}
-# url <- 'https://en.wikipedia.org/wiki/Sergei_Kuzmin_(boxer)'
-# 
-# url <- 'https://en.wikipedia.org/wiki/Anthony_Joshua'
-# 
-# tbl <- read_html(url) %>% 
-#     html_nodes(css = 'table')
-# 
-# tbl[4] %>% html_table(fill = TRUE) %>% as.data.frame()
+url <- 'https://en.wikipedia.org/wiki/Sergei_Kuzmin_(boxer)'
+
+url <- "https://en.wikipedia.org/wiki/Simon_Kean"
+
+tbl <- read_html(url) %>%
+    html_nodes(css = 'table')
+
+ tbl[3] %>% html_table(fill = TRUE) %>% as.data.frame()
+
+names <- foo %>% slice(1) %>% unlist(.,use.names = F)
+
+names(foo) <- names
+foo <- foo[-1,]
 ```
 
 
@@ -42,7 +39,7 @@ Urls that contain boxer's record
 urls = c('https://en.wikipedia.org/wiki/Anthony_Joshua',
          'https://en.wikipedia.org/wiki/Deontay_Wilder',
          'https://en.wikipedia.org/wiki/Tyson_Fury',
-         'https://en.wikipedia.org/wiki/Dillian_Whyte', # make sure u get right record
+         'https://en.wikipedia.org/wiki/Dillian_Whyte', 
          'https://en.wikipedia.org/wiki/Alexander_Povetkin',
          'https://en.wikipedia.org/wiki/Jarrell_Miller',
          'https://en.wikipedia.org/wiki/Kubrat_Pulev',
@@ -61,7 +58,34 @@ urls = c('https://en.wikipedia.org/wiki/Anthony_Joshua',
          "https://en.wikipedia.org/wiki/Evgenyi_Romanov",
          "https://en.wikipedia.org/wiki/Christian_Hammer",
          "https://en.wikipedia.org/wiki/Robert_Helenius",
-         "https://en.wikipedia.org/wiki/Efe_Ajagba")
+         "https://en.wikipedia.org/wiki/Efe_Ajagba",
+         "https://en.wikipedia.org/wiki/Bryant_Jennings",
+         "https://en.wikipedia.org/wiki/Charles_Martin_(boxer)",
+         "https://en.wikipedia.org/wiki/Lucas_Browne",
+         "https://en.wikipedia.org/wiki/Marco_Huck",
+         "https://en.wikipedia.org/wiki/Hughie_Fury",
+         "https://en.wikipedia.org/wiki/Carlos_Takam",
+         "https://en.wikipedia.org/wiki/Tomasz_Adamek",
+         "https://en.wikipedia.org/wiki/Junior_Fa",
+         "https://en.wikipedia.org/wiki/Kyotaro_Fujimoto",
+         "https://en.wikipedia.org/wiki/Johann_Duhaupas",
+         "https://en.wikipedia.org/wiki/Tony_Yoka",
+         "https://en.wikipedia.org/wiki/Artur_Szpilka",
+         "https://en.wikipedia.org/wiki/Zhang_Zhilei",
+         "https://en.wikipedia.org/wiki/Alexander_Dimitrenko",
+         "https://en.wikipedia.org/wiki/Simon_Kean",
+         "https://en.wikipedia.org/wiki/Mariusz_Wach",
+         "https://en.wikipedia.org/wiki/Trevor_Bryan",
+         "https://en.wikipedia.org/wiki/Éric_Molina",
+         "https://en.wikipedia.org/wiki/Bogdan_Dinu",
+         "https://en.wikipedia.org/wiki/Izu_Ugonoh",
+         "https://en.wikipedia.org/wiki/Arnold_Gjergjaj",
+         "https://en.wikipedia.org/wiki/Tyrone_Spong",
+         "https://en.wikipedia.org/wiki/Franz_Rill",
+         "https://en.wikipedia.org/wiki/George_Arias_(boxer)",
+         "https://en.wikipedia.org/wiki/Erkan_Teper",
+         "https://en.wikipedia.org/wiki/Gerald_Washington_(boxer)",
+         "https://en.wikipedia.org/wiki/Demsey_McKean")
 ```
 
 Extract boxer's name from urls
@@ -89,9 +113,27 @@ for (i in 1:length(urls)){
     record_temp = tbl[j] %>% html_table(fill = TRUE) %>% as.data.frame()
     # check if the names in table look like a table with win/loss record 
     if(length(intersect(req_names, record_temp %>% names())) == 3) {
-      # save the index of table with win/loss record
+      # save the win/loss record to a list of records
       record_lst[[i]] <- record_temp %>%
+        # create col for boxer's name
         mutate(boxer = boxer_names[i])
+      # break out of loop because record was found
+      break
+    }
+    # vector of values for fist row
+    row1 <- record_temp %>% slice(1) %>% unlist(.,use.names = F)
+    # if the first row looks like col names of record table
+    if(length(intersect(req_names, row1)) == 3){
+      # use the first row values as col names
+      names(record_temp) <- row1
+      # remove first first row
+      record_temp <- record_temp[-1,]
+      # save the win/loss record to a list of records
+      record_lst[[i]] <- record_temp %>%
+        # create a col for boxer's name
+        mutate(boxer = boxer_names[i],
+               `No.` = as.integer(`No.`))
+      # break out of loop because record was found
       break
     }
   }
@@ -101,16 +143,18 @@ for (i in 1:length(urls)){
 Filter records for wins only
 ```{r}
 # remove null entries from list
-# some boxers don't have win/loss records on their wikipeida page
+# some boxers may not have win/loss records on their wikipeida page
 record_lst <- record_lst[!sapply(record_lst, is.null)]
 
 record_df <- bind_rows(record_lst) %>% 
-  # only wins
-  filter(Result == "Win")# %>% 
+  # only wins 
+  filter(Result %in% c("Win"))# %>% 
   # filter for only wins against other top boxers
   #filter(Opponent %in% boxer_names) # might re-consider this
-```
 
+# boxer's records that weren't available
+setdiff(boxer_names, unique(record_df$boxer)) 
+```
 
 Create network graph object
 ```{r}
@@ -118,7 +162,22 @@ relations <- record_df %>%
   # centrality measure gives importance to nodes with more edges directed toward
   # a node. Therefore, relationships is defined as opponent gives a loss to boxer
   mutate(to = boxer, from = Opponent) %>%
-  select(from, to, Type)
+  select(from, to, Result, Type) %>%
+  # create weights for different win outcomes
+  # weights don't appear to affect page rank at all
+  mutate(weight = 
+           case_when(#Result == "Draw" ~ .5,
+                     Result == "Win" & Type %in% c("DQ", "TD") ~ 1,
+                     Result == "Win" & Type %in% c("SD", "DEC") ~ 1.25,
+                     Result == "Win" & Type %in% c("PTS", "MD") ~ 1.5,
+                     Result == "Win" & Type %in% c("UD") ~ 1.75,
+                     Result == "Win" & Type %in% c("TKO", "KO", "RTD") ~ 2)) %>%
+  # sum the weights and remove dupes
+  group_by(from, to) %>%
+  mutate(weight = sum(weight), rn = row_number()) %>%
+  ungroup() %>% 
+  filter(rn == 1) %>%
+  select(from, to, weight)
 
 # names of boxers in sample
 boxers_df = data.frame(name = union(relations$to, relations$from))
@@ -127,33 +186,7 @@ boxers_df = data.frame(name = union(relations$to, relations$from))
 boxers_g <- graph_from_data_frame(relations, directed = T, vertices = boxers_df)
 
 # save igraph object. to be plotted using gephi
-#write_graph(boxers_g, file = 'boxers_g.gml', format = 'gml')
-```
-
-
-D3 graph
-```{r}
-V(boxers_g)$div=c("hw")
-# Start by deleting any vertices that have no edges attached.
-boxers_g=delete.vertices(boxers_g,degree(boxers_g)==0)
-# we need to create ID attribute taking values 0,..,103 
-nodes=data.frame(vertex_attr(boxers_g))
-nodes$ID=as.numeric(nodes$name)-1
-#data frame with edge list
-edges=data.frame(get.edgelist(boxers_g)) 
-colnames(edges)=c("source","target")
-
-edges=merge(edges, nodes[,c("name","ID")],by.x="source",by.y="name")
-edges=merge(edges, nodes[,c("name","ID")],by.x="target",by.y="name")
-edges=edges[,3:4]
-colnames(edges)=c("source","target")
-
-
-j=forceNetwork(Links=edges, Nodes=nodes, Source = "source",
-               Target = "target", NodeID="name", Group="div",
-               fontSize=12, opacity = 0.8, zoom=T, legend=T)
-
-saveNetwork(j, file = 'boxers_g.html')
+# write_graph(boxers_g, file = 'boxers_g.gml', format = 'gml')
 ```
 
 Ranking
@@ -169,20 +202,54 @@ Ranking
 # page rank value when damping is set to 1. When damping = 0 then they all have
 # the same value)
 pr <- page_rank(boxers_g, algo = "prpack", vids = V(boxers_g),
-                directed = TRUE, damping = 1)
+                directed = TRUE, damping = .9999) # damping = 1 wont converge
 
 # create a dataframe of boxer's ranking and sort 
 ranking <- pr$vector %>% 
   as.data.frame() %>% 
   rownames_to_column("Boxer") %>%
   rename(Page_Rank = 2) %>%
-  arrange(desc(Page_Rank))
-```
+  arrange(desc(Page_Rank)) %>%
+  mutate(Rank = row_number())
 
-
-```{r}
 ranking
 ```
 
+Examine boxers record 
+```{r}
+# boxer based on on PR ranking
+b <- ranking$Boxer[22]
+# boxer name
+b
+# number of wins
+relations %>% filter(to == b )
+# wins against top boxers
+relations %>% filter(to == b & from %in% boxer_names)
+# losses
+relations %>% filter(from == b )
+```
+
+D3 graph
+```{r}
+V(boxers_g)$div=c("hw")
+# delete any vertices that have no edges attached.
+boxers_g <- delete.vertices(boxers_g,degree(boxers_g)==0)
+# create ids
+nodes <- data.frame(vertex_attr(boxers_g))
+nodes$ID <- as.numeric(nodes$name)-1
+# data frame with edge list
+edges <- data.frame(get.edgelist(boxers_g)) 
+colnames(edges) <- c("source","target")
+
+edges <- merge(edges, nodes[,c("name","ID")],by.x="source",by.y="name")
+edges <- merge(edges, nodes[,c("name","ID")],by.x="target",by.y="name")
+edges <- edges[,3:4]
+colnames(edges)=c("source","target")
 
 
+j <- forceNetwork(Links=edges, Nodes=nodes, Source = "source",
+                  Target = "target", NodeID="name", Group="div",
+                  fontSize=12, opacity = 0.8, zoom=T, legend=T)
+
+# saveNetwork(j, file = 'boxers_g.html')
+```
