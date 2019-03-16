@@ -313,8 +313,10 @@ ranking <- pr$vector %>%
 ranking
 ```
 
-Examine boxers record 
+
 ```{r, echo = F}
+# Examine boxers record 
+# 
 # # boxer based on on PR ranking
 # b <- ranking$Boxer[17]
 # # boxer name
@@ -327,8 +329,10 @@ Examine boxers record
 # relations %>% filter(from == b )
 ```
 
-Hypothetical Boxer Ranking
+
 ```{r, echo = F}
+# Hypothetical Boxer Ranking
+
 # # add a hypothetical boxer with 40 wins against nobodies
 # fake_records <- data.frame(from = seq(1,40,1),
 #                           to = rep("tom", 40),
