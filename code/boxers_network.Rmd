@@ -96,7 +96,8 @@ Also, the algorithm assigns too much importance to boxers with a lot of wins aga
 # Conclusion
 An objective ranking of boxers creates more credibility and interest for the sport. I applied Google’s PageRank algorithm to rank current heavyweight boxers and the results were mostly consistent with intuition. A larger sample of boxers and some modifications to the algorithm could provide more reasonable rankings. 
 
-# Code
+# Code 
+## (click "Code" button to show/hide code)
 
 Load libraries
 ```{r, warning = FALSE, message = FALSE}
