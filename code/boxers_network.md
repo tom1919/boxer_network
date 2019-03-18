@@ -1,18 +1,7 @@
----
-title: "Application of Google's PageRank to Pro Boxers"
-author: "Tommy Lang"
-date: "3/15/19"
-output: 
-  html_document:
-    code_folding: hide
-    df_print: paged
-    highlight: tango
-    number_sections: yes
-    theme: readable
-    toc: yes
-    toc_float: yes
-  rmarkdown::github_document
----
+Application of Google's PageRank to Pro Boxers
+================
+Tommy Lang
+3/15/19
 
 <style type="text/css">
 
@@ -46,61 +35,53 @@ pre { /* Code block - determines code spacing between lines */
     font-size: 12px;
 }
 </style>
+Introduction
+============
 
+In any competitive sport there is a natural desire to know who the best is. However, in boxing the rankings have been criticized as criminally suspect. Spoiled by monetary incentives, boxing promoters often create mismatched bouts to inflate their boxers' records. Also, there are 5 sanctioning organizations that award titles in trivialized weight classes resulting in the potential of over a 100 boxers named as “world champion” at any one time.
 
-# Introduction
-In any competitive sport there is a natural desire to know who the best is. However, in boxing the rankings have been criticized as criminally suspect. Spoiled by monetary incentives, boxing promoters often create mismatched bouts to inflate their boxers' records. Also, there are 5 sanctioning organizations that award titles in trivialized weight classes resulting in the potential of over a 100 boxers named as “world champion” at any one time. \newline
+In this document I describe an objective method to rank boxers and to determine who is the best current heavyweight boxer. I structure boxers into a network and use Google’s PageRank algorithm to quantify which boxer is the most important in the network. The graph below shows the network of boxers where the links between them represent a boxing match outcome between the fighters and the size of a boxer’s name is proportional to his rank.
 
-In this document I describe an objective method to rank boxers and to determine who is the best current heavyweight boxer. I structure boxers into a network and use Google’s PageRank algorithm to quantify which boxer is the most important in the network. The graph below shows the network of boxers where the links between them represent a boxing match outcome between the fighters and the size of a boxer’s name is proportional to his rank. 
+![](boxers_network_files/figure-markdown_github/network_graph-1.png)
 
-```{r network_graph, echo = F, warning = F, message = F, fig.width=15, fig.height=12}
-require(imager)
-img <- load.image("../data/boxer_network_graph.PNG")
-plot(img, axes=FALSE)
-```
+Data Collection
+===============
 
-# Data Collection
-The win / loss record of the top 50 current heavyweight boxers as ranked by boxrec.com was extracted from Wikipedia.com. These boxers were chosen mainly for convenience. Ideally, I would have liked to have a chained sample with the top 50 boxers as seeds but that proved difficult to obtain.  With the convenience sample, boxers in the network won’t get as much credit for defeating some of their opponents but that’s an acceptable compromise because a boxer that isn’t ranked in the top 50 are likely not very good. Only current active heavyweight boxers were sampled because boxers from different weight classes and eras are unlikely to be linked together.
+The win / loss record of the top 50 current heavyweight boxers as ranked by boxrec.com was extracted from Wikipedia.com. These boxers were chosen mainly for convenience. Ideally, I would have liked to have a chained sample with the top 50 boxers as seeds but that proved difficult to obtain. With the convenience sample, boxers in the network won’t get as much credit for defeating some of their opponents but that’s an acceptable compromise because a boxer that isn’t ranked in the top 50 are likely not very good. Only current active heavyweight boxers were sampled because boxers from different weight classes and eras are unlikely to be linked together.
 
-# Network Definition
-The network contains 783 nodes and 1075 links / edges. Each node represents one of the top 50 heavyweight boxers or a boxer that they defeated. The directed links represent a boxing match that resulted in a win going from the losing boxer to the winning boxer. The weights of the links are based on the type of resulting win. If the win was more definite (e.g. knockout) it was weighted higher than a win that’s more open to interpretation (e.g. split decision). 
+Network Definition
+==================
 
-# Boxer's Rankings
-Google’s PageRank algorithm was used to rank the boxers in the network. The algorithm is the most well-known method that Google’s search engine used to rank webpages in search results. It was designed so that webpages that received a lot of links from other webpages that received a lot of links would be ranked higher. It’s appropriate for the network of boxers because boxers that defeated other quality boxers should be ranked higher.  The damping factor of the algorithm was set to 0.999 so that boxers with more quality wins “absorb” more of the importance in the network and are ranked higher.
+The network contains 783 nodes and 1075 links / edges. Each node represents one of the top 50 heavyweight boxers or a boxer that they defeated. The directed links represent a boxing match that resulted in a win going from the losing boxer to the winning boxer. The weights of the links are based on the type of resulting win. If the win was more definite (e.g. knockout) it was weighted higher than a win that’s more open to interpretation (e.g. split decision).
 
-## Analysis of Rankings
-```{r top5_graph, echo = F, warning = F, message = F, , fig.width=6, fig.height=3.5, fig.align = 'center'}
-require(ggplot2)
+Boxer's Rankings
+================
 
-ranking <- readRDS("../data/ranking.rds")
+Google’s PageRank algorithm was used to rank the boxers in the network. The algorithm is the most well-known method that Google’s search engine used to rank webpages in search results. It was designed so that webpages that received a lot of links from other webpages that received a lot of links would be ranked higher. It’s appropriate for the network of boxers because boxers that defeated other quality boxers should be ranked higher. The damping factor of the algorithm was set to 0.999 so that boxers with more quality wins “absorb” more of the importance in the network and are ranked higher.
 
-ggplot(ranking[1:5,], aes(x = reorder(Boxer, Page_Rank), y = Page_Rank)) +
-  geom_col(fill = '#F7AD50', color = '#3F97D0') +
-  coord_flip() +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = .5, size = 22, face = "bold"),
-        axis.text=element_text(size=12),
-        axis.title=element_text(size=16),
-        axis.line = element_line(colour = "black")) +
-  scale_y_continuous(breaks = seq(0, .12, .02)) +
-  labs(title = "Top 5 HW Boxers", y = "Page Rank", x = "Boxer's Name")
+Analysis of Rankings
+--------------------
 
-# ggsave(filename = 'top5_bar_chart.png', plot = top5_bar_chart, 
-#        path = '../data/', device = "png", width = 7, height = 4)
-```
+<img src="boxers_network_files/figure-markdown_github/top5_graph-1.png" style="display: block; margin: auto;" />
 
-The top 5 boxers in the network is displayed in the bar chart above. The results are reasonable except for the notable exclusion of Tyson Fury. He is rightfully in anyone’s top 5 list but is ranked number 22 by the algorithm. The main reason for his lower ranking is because the network doesn’t account for his defeat of Wladimir Klitschko. Klitschko was dominate in his era and including him in the sample would have advanced Tyson Fury to be ranked second. \newline
+The top 5 boxers in the network is displayed in the bar chart above. The results are reasonable except for the notable exclusion of Tyson Fury. He is rightfully in anyone’s top 5 list but is ranked number 22 by the algorithm. The main reason for his lower ranking is because the network doesn’t account for his defeat of Wladimir Klitschko. Klitschko was dominate in his era and including him in the sample would have advanced Tyson Fury to be ranked second.
 
-Also, the algorithm assigns too much importance to boxers with a lot of wins against low quality boxers. For example, Tomasz Adamek is ranked number 10 because he has 51 links / wins, but those links are to boxers that don’t have incoming links to them. Eric Molina knocked out Adamek but Molina is ranked lower at 17 because he only has 24 links.  I believe some these issues would be solved if a larger sample was used which would result in a network that’s more interconnected (current network density: 0.0018).
+Also, the algorithm assigns too much importance to boxers with a lot of wins against low quality boxers. For example, Tomasz Adamek is ranked number 10 because he has 51 links / wins, but those links are to boxers that don’t have incoming links to them. Eric Molina knocked out Adamek but Molina is ranked lower at 17 because he only has 24 links. I believe some these issues would be solved if a larger sample was used which would result in a network that’s more interconnected (current network density: 0.0018).
 
-# Conclusion
-An objective ranking of boxers creates more credibility and interest for the sport. I applied Google’s PageRank algorithm to rank current heavyweight boxers and the results were mostly consistent with intuition. A larger sample of boxers and some modifications to the algorithm could provide more reasonable rankings. 
+Conclusion
+==========
 
-# Code 
-## (click "Code" button to show/hide code)
+An objective ranking of boxers creates more credibility and interest for the sport. I applied Google’s PageRank algorithm to rank current heavyweight boxers and the results were mostly consistent with intuition. A larger sample of boxers and some modifications to the algorithm could provide more reasonable rankings.
+
+Code
+====
+
+(click "Code" button to show/hide code)
+---------------------------------------
 
 Load libraries
-```{r, warning = FALSE, message = FALSE}
+
+``` r
 LoadPackages <- function(packages) {
   # Load or install packages if they aren't already loaded.
   #
@@ -120,7 +101,8 @@ LoadPackages(c("rvest", "dplyr", "tibble", "stringr", "igraph", "networkD3",
 ```
 
 Urls that contain boxer's record
-```{r}
+
+``` r
 urls = c('https://en.wikipedia.org/wiki/Anthony_Joshua',
          'https://en.wikipedia.org/wiki/Deontay_Wilder',
          'https://en.wikipedia.org/wiki/Tyson_Fury',
@@ -174,13 +156,15 @@ urls = c('https://en.wikipedia.org/wiki/Anthony_Joshua',
 ```
 
 Extract boxer's name from urls
-```{r}
+
+``` r
 boxer_names <- str_replace_all(urls, '.+wiki\\/', '') %>% 
   str_replace_all('_', ' ') %>% str_replace_all(' \\(.+', '')
 ```
 
 Extract boxer's win/loss record
-```{r}
+
+``` r
 # col names that indentifies a win/loss record table
 req_names = c("Result", "Record", "Opponent")
 
@@ -226,7 +210,8 @@ for (i in 1:length(urls)){
 ```
 
 Filter records for wins only
-```{r}
+
+``` r
 # remove null entries from list
 # some boxers may not have win/loss records on their wikipeida page
 record_lst <- record_lst[!sapply(record_lst, is.null)]
@@ -248,7 +233,8 @@ record_df <- bind_rows(record_lst) %>%
 ```
 
 Create network graph object
-```{r}
+
+``` r
 relations <- record_df %>% 
   # centrality measure gives importance to nodes with more edges directed toward
   # a node. Therefore, relationships is defined as opponent gives a loss to boxer
@@ -281,7 +267,8 @@ boxers_g <- graph_from_data_frame(relations, directed = T, vertices = boxers_df)
 ```
 
 Ranking
-```{r}
+
+``` r
 # page rank centrality
 # PageRank theory suggests that an imaginary flow of losses that is randomly
 # going from one boxer to another will eventually stop. The damping factor is
@@ -311,60 +298,44 @@ ranking <- pr$vector %>%
 
 # saveRDS(ranking, "../data/ranking.rds")
 
-ranking #%>% head(30)
+ranking %>% head(30)
 ```
 
-
-```{r, echo = F}
-# Examine boxers record 
-# 
-# # boxer based on on PR ranking
-# b <- ranking$Boxer[17]
-# # boxer name
-# b
-# # number of wins
-# relations %>% filter(to == b )
-# # wins against top boxers
-# relations %>% filter(to == b & from %in% boxer_names)
-# # losses
-# relations %>% filter(from == b )
-```
-
-
-```{r, echo = F}
-# Hypothetical Boxer Ranking
-
-# # add a hypothetical boxer with 40 wins against nobodies
-# fake_records <- data.frame(from = seq(1,40,1),
-#                           to = rep("tom", 40),
-#                           weight = rep(1.5, 40)) %>%
-#   mutate(from = as.character(from),
-#          to = as.character(to)) %>%
-#   bind_rows(relations)
-# 
-# # names of boxers in sample
-# boxers_df2 = data.frame(name = union(fake_records$to, fake_records$from))
-# 
-# # create igraph object
-# fake_g <- graph_from_data_frame(fake_records, directed = T, 
-#                                   vertices = boxers_df2)
-# 
-# pr2 <- page_rank(fake_g, algo = "prpack", vids = V(fake_g),
-#                 directed = TRUE, damping = .9999)
-# 
-# ranking_fake <- pr2$vector %>% 
-#   as.data.frame() %>% 
-#   rownames_to_column("Boxer") %>%
-#   rename(Page_Rank = 2) %>%
-#   arrange(desc(Page_Rank)) %>%
-#   mutate(RN = row_number()) %>%
-#   select(RN, Boxer, Page_Rank)
-# 
-# ranking_fake
-```
+    ##    RN                Boxer   Page_Rank Wins
+    ## 1   1       Anthony Joshua 0.121731180   22
+    ## 2   2       Deontay Wilder 0.045519186   39
+    ## 3   3   Alexander Povetkin 0.039220089   34
+    ## 4   4        Dillian Whyte 0.034690576   24
+    ## 5   5        Joseph Parker 0.028462276   25
+    ## 6   6         Kubrat Pulev 0.023163949   26
+    ## 7   7       Jarrell Miller 0.022831403   23
+    ## 8   8         George Arias 0.019701535   49
+    ## 9   9           Luis Ortiz 0.018914693   31
+    ## 10 10        Tomasz Adamek 0.017530698   51
+    ## 11 11    Dominic Breazeale 0.016564646   20
+    ## 12 12         Carlos Takam 0.015943996   33
+    ## 13 13        Adam Kownacki 0.015892206   19
+    ## 14 14      Johann Duhaupas 0.015719357   35
+    ## 15 15      Bryant Jennings 0.015475335   22
+    ## 16 16          Éric Molina 0.015060603   25
+    ## 17 17          Óscar Rivas 0.015034906   25
+    ## 18 18        Artur Szpilka 0.014638827   21
+    ## 19 19           Marco Huck 0.013881134   38
+    ## 20 20         Mariusz Wach 0.013687125   33
+    ## 21 21 Alexander Dimitrenko 0.012808024   40
+    ## 22 22           Tyson Fury 0.011764980   25
+    ## 23 23       Dereck Chisora 0.011724808   27
+    ## 24 24      Robert Helenius 0.011372176   27
+    ## 25 25          Hughie Fury 0.011093372   20
+    ## 26 26            Andy Ruiz 0.009667491   31
+    ## 27 27       Charles Martin 0.008221641   26
+    ## 28 28          Erkan Teper 0.008012750   18
+    ## 29 29     Christian Hammer 0.007685859   23
+    ## 30 30         Agit Kabayel 0.007681634   18
 
 D3 network graph
-```{r, fig.align = 'center'}
+
+``` r
 V(boxers_g)$div=c("Boxers")
 # delete any vertices that have no edges attached.
 boxers_g <- delete.vertices(boxers_g,degree(boxers_g)==0)
@@ -385,7 +356,7 @@ j <- forceNetwork(Links=edges, Nodes=nodes, Source = "source",
                   Target = "target", NodeID="name", Group="div",
                   fontSize=12, opacity = 0.8, zoom=T, legend=T)
 
-j
+#j
 
 # saveNetwork(j, file = '../data/boxers_d3.html')
 ```
