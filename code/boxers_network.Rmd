@@ -11,7 +11,7 @@ output:
     theme: readable
     toc: yes
     toc_float: yes
-  rmarkdown::github_document
+  #rmarkdown::github_document
 ---
 
 <style type="text/css">
@@ -364,22 +364,29 @@ ranking #%>% head(30)
 ```
 
 D3 network graph
-```{r, fig.align = 'center'}
+```{r, fig.align = 'center', warning = F, message = F}
 V(boxers_g)$div=c("Boxers")
+
 # delete any vertices that have no edges attached.
 boxers_g <- delete.vertices(boxers_g,degree(boxers_g)==0)
+
 # create ids
-nodes <- data.frame(vertex_attr(boxers_g))
-nodes$ID <- as.numeric(nodes$name)-1
+nodes <- data.frame(vertex_attr(boxers_g)) %>%
+  mutate(ID = row_number(),
+         ID = ID -1) # has to have zero index
+
+#nodes$ID <- as.numeric(nodes$name)-1
+
 # data frame with edge list
 edges <- data.frame(get.edgelist(boxers_g)) 
 colnames(edges) <- c("source","target")
 
-edges <- merge(edges, nodes[,c("name","ID")],by.x="source",by.y="name")
-edges <- merge(edges, nodes[,c("name","ID")],by.x="target",by.y="name")
-edges <- edges[,3:4]
-colnames(edges)=c("source","target")
+edges <- edges %>% 
+  left_join(nodes, by = c("source" = "name")) %>% 
+  left_join(nodes, by = c("target" = "name")) %>%
+  select(4,6)
 
+colnames(edges) <- c("source","target")
 
 j <- forceNetwork(Links=edges, Nodes=nodes, Source = "source",
                   Target = "target", NodeID="name", Group="div",
@@ -389,3 +396,7 @@ j
 
 # saveNetwork(j, file = '../data/boxers_d3.html')
 ```
+
+
+
+
