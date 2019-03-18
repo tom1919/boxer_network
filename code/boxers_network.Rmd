@@ -49,7 +49,7 @@ pre { /* Code block - determines code spacing between lines */
 
 
 # Introduction
-In any competitive sport there is a natural desire to know who the best is. However, in boxing the rankings have been criticized as criminally suspect. Spoiled by monetary incentives, boxing promoters often create mismatched bouts to inflate their boxer’s records. Also, there are 5 sanctioning organizations that award titles in trivialized weight classes resulting in the potential of over a 100 boxer’s named as “world champion” at any one time. \newline
+In any competitive sport there is a natural desire to know who the best is. However, in boxing the rankings have been criticized as criminally suspect. Spoiled by monetary incentives, boxing promoters often create mismatched bouts to inflate their boxers' records. Also, there are 5 sanctioning organizations that award titles in trivialized weight classes resulting in the potential of over a 100 boxers named as “world champion” at any one time. \newline
 
 In this document I describe an objective method to rank boxers and to determine who is the best current heavyweight boxer. I structure boxers into a network and use Google’s PageRank algorithm to quantify which boxer is the most important in the network. The graph below shows the network of boxers where the links between them represent a boxing match outcome between the fighters and the size of a boxer’s name is proportional to his rank. 
 
